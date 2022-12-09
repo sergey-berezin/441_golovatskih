@@ -50,7 +50,7 @@ try
     {
         asyncOutput[i] = Task.Run(() => ArcFacePackage.ArcFacePackage.ProcessAsync(faceByte1, faceByte2, token));
     }
-    Thread.Sleep((int)(asyncElapsedMs / 2));
+    Thread.Sleep((int)(asyncElapsedMs / 3));
     cancelTokenSource.Cancel();
     Thread.Sleep((int)(asyncElapsedMs * 1.5));
 } catch (Exception ex) 
