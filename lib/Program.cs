@@ -2,6 +2,7 @@
 using Microsoft.ML.OnnxRuntime.Tensors;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
+using System.Data;
 
 namespace ArcFacePackage
 {
@@ -14,7 +15,7 @@ namespace ArcFacePackage
             var assembly = typeof(ArcFacePackage).Assembly;
             using var modelStream = assembly.GetManifestResourceStream("ArcFacePackage.arcfaceresnet100-8.onnx");
             using var memoryStream = new MemoryStream();
-            if (modelStream is not null) { modelStream.CopyTo(memoryStream); }
+            modelStream?.CopyTo(memoryStream);
             return new InferenceSession(memoryStream.ToArray());
         }
 
@@ -30,13 +31,11 @@ namespace ArcFacePackage
 
         public static async Task<float[]> ProcessAsync(byte[] image1, byte[] image2, CancellationToken token)
         {
-            Task<float[]> embeddings1 = GetEmbeddings(image1, token);
-            Task<float[]> embeddings2 = GetEmbeddings(image2, token);
+            var embeddings1 = await GetEmbeddingsAsync(image1, token);
+            var embeddings2 = await GetEmbeddingsAsync(image2, token);
 
-            await Task.WhenAll(embeddings1, embeddings2);
-
-            var distance = Distance(embeddings1.Result, embeddings2.Result) * Distance(embeddings1.Result, embeddings2.Result);
-            var similarity = Similarity(embeddings1.Result, embeddings2.Result);
+            var distance = Distance(embeddings1, embeddings2) * Distance(embeddings1, embeddings2);
+            var similarity = Similarity(embeddings1, embeddings2);
             return new float[] { distance, similarity };
         }
 
@@ -102,14 +101,27 @@ namespace ArcFacePackage
             return t;
         }
 
-        private static async Task<float[]> GetEmbeddings(byte[] byteImage, CancellationToken token)
+        private static async Task<float[]> GetEmbeddingsAsync(byte[] byteImage, CancellationToken token)
         {
             MemoryStream ms = new(byteImage);
             Image<Rgb24> returnImage = await Image.LoadAsync<Rgb24>(ms, token);
             DenseTensor<float> tensor = ImageToTensor(returnImage, token);
-            var inputs = new List<NamedOnnxValue> { NamedOnnxValue.CreateFromTensor("data", tensor) };
-            using IDisposableReadOnlyCollection<DisposableNamedOnnxValue> results = Session.Run(inputs);
-            return Normalize(results.First(v => v.Name == "fc1").AsEnumerable<float>().ToArray());
+
+            return await Task<float[]>.Factory.StartNew(() =>
+            {
+                {
+                    token.ThrowIfCancellationRequested();
+                    var inputs = new List<NamedOnnxValue> { NamedOnnxValue.CreateFromTensor("data", tensor) };
+                    IDisposableReadOnlyCollection<DisposableNamedOnnxValue> results;
+                    lock (Session)
+                    {
+                        results = Session.Run(inputs);
+                    }
+                    var res = Normalize(results.First(v => v.Name == "fc1").AsEnumerable<float>().ToArray());
+                    results.Dispose();
+                    return res;
+                }
+            }, token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
         }
 
         private static float[] GetEmbeddings(byte[] byteImage)
