@@ -1,0 +1,11 @@
+{
+  "Version": 1,
+  "ProjectMap": {
+    "a3499d17-1e19-4ca1-835f-579b88914895": {
+      "ProjectGuid": "a3499d17-1e19-4ca1-835f-579b88914895",
+      "DisplayName": "FaceComparer_storage",
+      "ColorIndex": 0
+    }
+  },
+  "NextColorIndex": 1
+}
