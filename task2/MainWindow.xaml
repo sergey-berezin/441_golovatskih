@@ -1,0 +1,21 @@
+﻿<Window x:Class="FaceComparer.MainWindow"
+        xmlns:dataGrid2D="http://gu.se/DataGrid2D"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:FaceComparer"
+        mc:Ignorable="d"
+        Title="Face Comparer" Height="495" Width="800" ResizeMode="NoResize">
+    <Grid x:Name="MainDataTable">
+        <ProgressBar x:Name="CmpPB" Margin="20,0,20,10" Height="70" VerticalAlignment="Bottom"/>
+        <Button x:Name="LoadButton" Command="{Binding Load}" Content="Load" HorizontalAlignment="Left" Margin="20,10,0,0" VerticalAlignment="Top" Height="46" Width="244"/>
+        <Button x:Name="CompareButton" Command="{Binding Compare}" Content="Compare" HorizontalAlignment="Center" Margin="0,10,0,0" VerticalAlignment="Top" Height="46" Width="244"/>
+        <Button x:Name="CancelButton" Command="{Binding Cancel}" Content="Cancel" Margin="0,10,20,0" HorizontalAlignment="Right" Width="244" Height="46" VerticalAlignment="Top"/>
+        <DataGrid x:Name="MainDataGrid" DataContext="{Binding DataGrid2D, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
+            dataGrid2D:ItemsSource.Array2D="{Binding Data2D, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
+            dataGrid2D:ItemsSource.ColumnHeadersSource="{Binding ColumnHeaders, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
+            dataGrid2D:ItemsSource.RowHeadersSource="{Binding RowHeaders, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
+            Margin="20,61,20,85" IsReadOnly="True" SelectionUnit="Cell" CanUserSortColumns="False" />
+    </Grid>
+</Window>
